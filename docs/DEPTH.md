@@ -37,3 +37,24 @@
 ## 已知不覆盖
 
 数据来自仓内样例或用户粘贴文件，不连接外部业务生产系统。平台不执行实际资金划转或行政审批。
+
+## 改单放行层
+
+| 能力 | 使用者动作 | 入口 | 核心文件 | 测试 |
+|---|---|---|---|---|
+| 改单提交与裁决 | 提交拆单/并箱/换箱/更正申报变更单 | `POST /api/changes` | `app/changes.py`、`app/changestore.py` | `tests/test_changes.py` |
+| 当前指针 | 查看当前批与生效变更 | `GET /api/current` | `app/changestore.py` | `tests/test_changes.py::test_same_change_is_idempotent` |
+| 封存件下载 | 下载裁决通过主单的封存件 | `GET /api/changes/{change_id}/seal/{master_id}` | `app/changes.py::seal_zip` | `tests/test_changes.py::test_seal_only_for_passed_master` |
+
+变更单结构错误 422；数值问题随候选批进管线隔离。拆单子票合计不守恒、跨父并箱由净毛重核验阻断；并箱成员单位不一致或危险品类别冲突直接拒绝（BAD_MERGE）。换箱移动整棵子树，危险品同箱按候选批重判。
+
+## 改单陷阱登记
+
+| TRAP | 现象 | 处理 | 位置 | 测试 |
+|---|---|---|---|---|
+| TRAP-C1 | 改单后旧关系残留 | 候选批整体替换当前指针，页面只展示当前关系，差异单列移除项 | `app/changestore.py::_switch` | `tests/test_changes.py::test_seal_only_for_passed_master` |
+| TRAP-C2 | 换箱后危险品说不清 | 子树整箱移动后重判同箱相容；通过/阻断主单同箱牵连整批待行 | `app/changes.py::judge` | `tests/test_changes.py::test_entanglement_forces_batch_hold` |
+| TRAP-C3 | 主单申报重量脱节 | 候选批与报关预申报逐项对账，脱节即整批待行 | `app/changes.py::judge` | `tests/test_changes.py::test_declaration_mismatch_holds_batch` |
+| TRAP-C4 | 切换半截生效 | 落库与拨指针同事务，失败整体回滚并留修改前证据 | `app/changestore.py::_switch/_record_rollback` | `tests/test_changes.py::test_stale_base_rolls_back_and_keeps_evidence` |
+| TRAP-C5 | 重跑变更出现第二套当前结果 | 变更编号由变更单原文确定性生成，重复提交返回既有结果 | `app/changes.py::change_id` | `tests/test_changes.py::test_same_change_is_idempotent` |
+| TRAP-C6 | 隔离行随改单丢失 | 隔离行原值随候选批重新隔离，证据不静默消失 | `app/changes.py::apply_changes` | `tests/test_changes.py::test_quarantine_rows_follow_candidate` |

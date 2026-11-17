@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {"op": "swap", "id": "M001-P2", "container": "C009"},
+    {"op": "split", "id": "M001-P1-2", "into": [
+      {"id": "M001-P1-2A", "packages": "5", "package_unit": "carton", "net": "0.05", "gross": "0.055", "weight_unit": "t", "hazard": "3", "un_code": "UN1993"},
+      {"id": "M001-P1-2B", "packages": "5", "package_unit": "carton", "net": "0.05", "gross": "0.055", "weight_unit": "t", "hazard": "none"}
+    ]},
+    {"op": "redeclare", "id": "M001", "gross": "440"}
+  ]
+}

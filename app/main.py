@@ -6,14 +6,17 @@ from fastapi.staticfiles import StaticFiles
 from app.config import ROOT, META, MODULES, DB_PATH
 from app.errors import BusinessError
 from app.engine import evaluate
-from app import store
+from app import store, changestore
 from app.archive import serialize
+from app.routes_changes import router as changes_router
 
 @asynccontextmanager
 async def lifespan(app):
     store.save(DB_PATH,evaluate())
+    changestore.ensure_current(DB_PATH)
     yield
 app=FastAPI(title=META['title'],lifespan=lifespan)
+app.include_router(changes_router)
 app.mount('/static',StaticFiles(directory=str(ROOT/'app/static')),name='static')
 @app.exception_handler(BusinessError)
 async def business_error(request:Request,error:BusinessError):

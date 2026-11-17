@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {"op": "redeclare", "id": "M001", "gross": "440"},
+    {"op": "split", "id": "M002-P1", "into": [
+      {"id": "M002-P1X", "packages": "12", "net": "120", "gross": "132"},
+      {"id": "M002-P1Y", "packages": "6", "net": "60", "gross": "66"}
+    ]},
+    {"op": "swap", "id": "M003-P1", "container": "C002"}
+  ]
+}
